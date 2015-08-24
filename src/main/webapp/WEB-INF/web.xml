@@ -2,7 +2,15 @@
 <web-app xmlns="http://java.sun.com/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
         version="3.0">
-
+	<context-param>
+  		<param-name>GitHub.ClientId</param-name>
+   		<param-value>45c2459a7bb97c8aa9c8</param-value>
+  	</context-param>
+  	<context-param>
+  		<param-name>GitHub.ClientSecret</param-name>
+   		<param-value>70d3ab3891ed85234ba1d10eca411188e5484d00</param-value>
+  	</context-param>
+  
     <servlet>
         <servlet-name>Jersey Web Application</servlet-name>
         <servlet-class>org.glassfish.jersey.servlet.ServletContainer</servlet-class>
