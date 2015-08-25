@@ -1,35 +1,29 @@
 package cz.ostastny.andycd.resources;
 
-import java.io.BufferedReader;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.List;
 
+import javax.inject.Inject;
 import javax.servlet.ServletContext;
 import javax.ws.rs.Consumes;
-import javax.ws.rs.CookieParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriBuilder;
 
 import org.apache.log4j.Logger;
 import org.glassfish.jersey.client.oauth2.ClientIdentifier;
 import org.glassfish.jersey.client.oauth2.OAuth2ClientSupport;
 import org.glassfish.jersey.client.oauth2.OAuth2CodeGrantFlow;
-import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.jackson.JacksonFeature;
+import org.hibernate.Session;
+import org.hibernate.Transaction;
 
 import cz.ostastny.andycd.SimpleOAuthService;
 import cz.ostastny.andycd.models.GitHubUser;
@@ -45,7 +39,11 @@ public class ReleasePathResource {
 	 @Context
 	 private ServletContext servletContext;
 	 
+	 @Inject Session session;
+		
+	 
 	 @GET
+	 @Path("test")
 	 @Produces(MediaType.APPLICATION_JSON)
 	 public Response test() throws URISyntaxException
 	 { 
@@ -64,8 +62,7 @@ public class ReleasePathResource {
 		 GitHubUser user = resp.readEntity(GitHubUser.class);
 
 		 return Response.ok(user).build();
-	 }
-	 
+	 }	 
 		
 	 public Response githubAuthRedirect() throws URISyntaxException {
 		 String clientKey = servletContext.getInitParameter("GitHub.ClientId");
@@ -95,43 +92,45 @@ public class ReleasePathResource {
 		 return Response.seeOther(new URI(githubAuthURI)).build();
 	 }
 	 
+	 @GET
+	 @Produces(MediaType.APPLICATION_JSON)
+	 public List<ReleasePath> getAll() {
+		 List<ReleasePath> pipelines = null; 
+
+		 pipelines = session.createCriteria(ReleasePath.class).list();
+	    	
+	     return pipelines;
+	 }
+	 
 	 @POST
 	 @Consumes(MediaType.APPLICATION_JSON)
 	 public Response createPath(ReleasePath rp) {
 		 //create new git repo
 		 log.info("createPath()");
 		 
-		 String repoName = rp.getName();
-		 try
-		 {
-			 Process p = Runtime.getRuntime().exec("git init " + repoName);
-			 p.waitFor();
-			 
-			 BufferedReader reader = 
-					 new BufferedReader(new InputStreamReader(p.getInputStream()));
+		 Transaction tx = null;
+		 try {
+			 tx = session.beginTransaction();
 
-			 StringBuilder sb = new StringBuilder();	
-			 String line = null;		
-			 while ((line = reader.readLine())!= null) {
-				 sb.append(line + "\n");
+			 if(rp.getId() != null)
+			 {
+				 ReleasePath rpCopy = (ReleasePath) session.merge(rp);
+				 session.saveOrUpdate(rpCopy);
 			 }
-			 
-			 PrintWriter out = new PrintWriter(
-					    new OutputStreamWriter(
-					       new FileOutputStream(repoName + "/.git/hooks/post-commit"), "UTF-8"));
-			 
-			 out.println("#!/bin/sh");
-			 out.println("git log --pretty=format:'%h' -n 1  | curl -X POST --header \"Content-Type: application/json\" --header \"Accept: application/json\" -d @- \"http://localhost:8080/andycd/api/ReleasePath/release\"");
-			 out.println("exit 0");
-			 out.close();
-			 
-			 log.info(sb.toString());
-		 }
-		 catch(Exception ex)
-		 {
-			 log.error("Git init error", ex);
-		 }
+			 else
+			 {
+				 session.save(rp);
+			 }
 
+			 tx.commit();
+		 }catch(org.hibernate.exception.ConstraintViolationException ex) {
+			 Logger.getLogger(getClass()).error("DB error", ex);
+			 //throw new AppException(409, 0, ex.getMessage(), ex.getSQLException().getMessage(), null);	//Conflict
+			 throw ex;
+		 }finally {
+			 if(tx.isActive())
+				 tx.rollback();
+		 }
  		
 		 return Response.ok().build();
 	 }
