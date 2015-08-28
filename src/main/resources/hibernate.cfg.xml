@@ -5,11 +5,11 @@
 
 <hibernate-configuration>
 <session-factory>
-	<property name="hibernate.connection.driver_class">org.hsqldb.jdbcDriver</property>
-    <property name="hibernate.connection.url">jdbc:hsqldb:hsql://localhost:9001</property>
-    <property name="hibernate.connection.username">sa</property>
-    <property name="hibernate.connection.password"></property>
-    <property name="hibernate.dialect">org.hibernate.dialect.HSQLDialect</property>
+	 <property name="hibernate.connection.driver_class">org.postgresql.Driver</property>
+    <property name="hibernate.connection.url">jdbc:postgresql://ec2-54-83-46-91.compute-1.amazonaws.com:5432/d3a9a9lp9ko94v?ssl=true&amp;sslfactory=org.postgresql.ssl.NonValidatingFactory</property>
+    <property name="hibernate.connection.username">vmnkkatcsgdmeb</property>
+    <property name="hibernate.connection.password">LxVWGWDTorYJ2nQ3MbiGDKv8_0</property>
+    <property name="hibernate.dialect">org.hibernate.dialect.PostgreSQLDialect</property>
     <property name="hibernate.show_sql">true</property>
     <property name="hibernate.temp.use_jdbc_metadata_defaults">false</property>
     <property name="hibernate.hbm2ddl.auto">create</property>
