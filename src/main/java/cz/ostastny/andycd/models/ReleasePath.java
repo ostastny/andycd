@@ -12,6 +12,8 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 
 @Entity
 public class ReleasePath {
@@ -47,7 +49,8 @@ public class ReleasePath {
 		this.id = id;
 	}
 
-	@OneToMany(fetch = FetchType.LAZY, mappedBy = "pipeline", cascade = CascadeType.PERSIST)
+	@OneToMany(fetch = FetchType.LAZY, mappedBy = "pipeline", cascade = CascadeType.ALL, orphanRemoval = false)
+	@JsonManagedReference
 	public Set<Environment> getEnvs() {
 		return envs;
 	}
