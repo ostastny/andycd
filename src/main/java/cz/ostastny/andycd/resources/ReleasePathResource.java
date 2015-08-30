@@ -1,5 +1,6 @@
 package cz.ostastny.andycd.resources;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
@@ -10,6 +11,7 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.WebTarget;
@@ -28,6 +30,7 @@ import org.hibernate.Transaction;
 import cz.ostastny.andycd.SimpleOAuthService;
 import cz.ostastny.andycd.models.GitHubUser;
 import cz.ostastny.andycd.models.ReleasePath;
+import cz.ostastny.andycd.services.GitHubService;
 import io.swagger.annotations.Api;
 
 
@@ -40,6 +43,20 @@ public class ReleasePathResource {
 	 private ServletContext servletContext;
 	 
 	 @Inject Session session;
+
+	 @Inject GitHubService gitHubService;
+	 
+	 @GET
+	 @Path("repo/{name}")
+	 @Produces(MediaType.APPLICATION_JSON)
+	 public Response testRepo(@PathParam("name") String repoName) throws Exception 
+	 { 
+		gitHubService.CreateRepo(repoName);
+		
+		final int port = gitHubService.StartDaemon(repoName);
+
+		return Response.ok(port).build();
+	 }	 
 		
 	 
 	 @GET
